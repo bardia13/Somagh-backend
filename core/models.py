@@ -59,6 +59,7 @@ class Case(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     description = models.TextField(null=False)
     status = models.CharField(max_length=1, choices=statusChoices, default=Open)
+    satisfied = models.IntegerField(default=1)
 
 
 class Refer(models.Model):

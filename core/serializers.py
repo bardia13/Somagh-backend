@@ -4,6 +4,20 @@ from .models import Profile, Case, Refer, Department
 from django.contrib.auth.models import User
 
 
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+
+
+class ProfileDetailSerializer(serializers.ModelSerializer):
+    user = UserDetailSerializer()
+
+    class Meta:
+        model = Profile
+        fields = '__all__'
+
+
 class RegisterUserSerialzier(serializers.Serializer):
     username = serializers.CharField(max_length=20)
     password = serializers.CharField(max_length=100, write_only=True)

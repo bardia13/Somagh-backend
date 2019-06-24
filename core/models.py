@@ -61,4 +61,10 @@ class Case(models.Model):
     status = models.CharField(max_length=1, choices=statusChoices, default=Open)
 
 
-# class Refer(models.Model)
+class Refer(models.Model):
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='refers')
+    date = models.DateTimeField(auto_now_add=True)
+    sender = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='refers_sent')
+    receiver = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='refers_received')
+    description = models.TextField(max_length=1000, blank=True)
+    isLeaf = models.BooleanField(default=True)

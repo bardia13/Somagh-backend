@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from .models import Profile
+from .models import Profile, Case, Refer, Department
 from django.contrib.auth.models import User
 
 
@@ -12,6 +12,7 @@ class RegisterUserSerialzier(serializers.Serializer):
     first_name = serializers.CharField(max_length=100, write_only=True)
     last_name = serializers.CharField(max_length=100, write_only=True)
     userRole = serializers.CharField(max_length=1, default='S', write_only=True)
+
 
     def create(self, validated_data):
         if User.objects.filter(username=validated_data['username']).exists() or \
@@ -38,3 +39,25 @@ class RegisterUserSerialzier(serializers.Serializer):
         return {
             'username' : new_user.username,
         }
+
+
+class CaseCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Case
+        fields = ('creator', 'department', 'title', 'type', 'description',)
+
+
+class CaseDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Case
+        fields = '__all__'
+
+
+class ReferListSerialzier(serializers.ModelSerializer):
+    sender = serializers.SlugRelatedField(read_only=True, slug_field='username')
+    receiver = serializers.SlugRelatedField(read_only=True, slug_field='username')
+    case = CaseDetailSerializer()
+
+    class Meta:
+        model = Refer
+        fields = ('case', 'date', 'description', 'isLeaf', 'sender', 'reciever')

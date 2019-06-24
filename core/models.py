@@ -18,7 +18,7 @@ class Profile(models.Model):
         (Student, 'دانشجو'),
         (Manager, 'مدیر'),
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     serial = models.CharField(max_length=10, null=False)
     nationalId = models.CharField(max_length=10, null=True, blank=True)
     userRole = models.CharField(max_length=1, choices=userRoleChoices, default=Manager)

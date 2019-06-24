@@ -61,3 +61,43 @@ class ReferListSerialzier(serializers.ModelSerializer):
     class Meta:
         model = Refer
         fields = ('case', 'date', 'description', 'isLeaf', 'sender', 'reciever')
+
+
+class ActionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(write_only=True)
+    case = serializers.PrimaryKeyRelatedField(queryset=Case.objects.all().exclude(status=Case.Closed))
+    sender = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    receiver = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True)
+    description = serializers.CharField(max_length=1000, allow_blank=True)
+    status = serializers.CharField(max_length=1, allow_blank=True, default="")
+
+    def create(self, validated_data):
+        case = validated_data['case']
+        currentRefer = None
+        try:
+            currentRefer = Refer.objects.get(case=case, isLeaf=True)
+        except Refer.DoesNotExist:
+            pass
+        if currentRefer is not None:
+            currentRefer.isLeaf = False
+        if validated_data['status'] != "" :
+            case.status = validated_data['status']
+            case.save()
+
+        if validated_data['receiver'] is not None :
+            refer = Refer.objects.create(
+                case=case,
+                sender=validated_data['sender'],
+                receiver=validated_data['receiver'],
+                description=validated_data['description'],
+                isLeaf=True
+            )
+
+            return refer
+
+        return {
+            "status": case.status
+        }
+
+
+

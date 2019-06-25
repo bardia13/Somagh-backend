@@ -13,6 +13,14 @@ class CaseCreate(CreateAPIView):
     serializer_class = CaseCreateSerializer
     queryset = Case.objects.all()
 
+    def create(self, request, *args, **kwargs):
+        creator = self.request.user
+        request.data['creator'] = creator.id
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 class CaseList(ListAPIView):
     permission_classes = [IsAuthenticated, ]

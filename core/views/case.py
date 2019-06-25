@@ -1,5 +1,5 @@
 from rest_framework.generics import GenericAPIView, CreateAPIView, ListAPIView
-from ..models import Case, Refer
+from ..models import Case, Refer, Department
 from ..serializers import CaseCreateSerializer, ReferListSerialzier, ActionSerializer, CaseDetailSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -18,7 +18,14 @@ class CaseCreate(CreateAPIView):
         request.data['creator'] = creator.id
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        case = serializer.save()
+        department = Department.objects.get(id = request.data.get("department"))
+        refer = Refer.objects.create(
+            case=case,
+            sender=creator,
+            receiver=department.manager,
+            isLeaf=True
+        )
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -67,9 +74,11 @@ class Action(CreateAPIView):
     def create(self, request, *args, **kwargs):
         receiver = self.request.data.get('receiver', None)
         if receiver is None:
-            receiver = self.request.user
-        sender = self.request.user
-        serializer = self.get_serializer(data=request.data, receiver=receiver, sender=sender)
+            receiver = self.request.user.id
+        sender = self.request.user.id
+        request.data['receiver'] = receiver
+        request.data['sender'] = sender
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)

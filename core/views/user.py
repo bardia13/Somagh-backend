@@ -5,7 +5,7 @@ from django.http import Http404
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.models import User
-from ..serializers import RegisterUserSerialzier, ProfileDetailSerializer,DepartmentDetailSerializer
+from ..serializers import RegisterUserSerialzier, ProfileDetailSerializer,DepartmentDetailSerializer, UserMinimalSerializer
 
 
 class CurrentProfileDetail(RetrieveAPIView):
@@ -25,6 +25,12 @@ class ProfileList(ListAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = ProfileDetailSerializer
     queryset = Profile.objects.all()
+
+
+class StaffProfileMinimalList(ListAPIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = UserMinimalSerializer
+    queryset = User.objects.filter(is_staff=True)
 
 
 class RetrieveProfile(RetrieveAPIView):

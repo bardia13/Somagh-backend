@@ -1,0 +1,159 @@
+version: "3.7"
+#
+x-defaults: &sentry
+  restart: unless-stopped
+  image: sentry:latest
+  depends_on:
+    - sentry-redis
+    - sentry-postgres
+  env_file: sentry.env
+  environment:
+    SENTRY_REDIS_HOST: sentry-redis
+    SENTRY_POSTGRES_HOST: sentry-postgres
+  volumes:
+    - sentry-data:/var/lib/sentry/files
+
+
+services:
+#  grafana:
+#    container_name: grafana_container
+#    image: grafana/grafana
+#    restart: always
+#    volumes:
+#      - grafana_storage:/var/lib/grafana
+#    ports:
+#      - "3000:3000"
+#    env_file:
+#      - grafana.env
+#    depends_on:
+#      - prometheus
+#  prometheus:
+#    container_name: prometheus_container
+#    image: prom/prometheus
+#    restart: always
+#    volumes:
+#      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+#      - ./django.rules.yml:/etc/prometheus/django.rules.yml
+#      - ./django.html:/usr/share/prometheus/consoles/django.html
+#  mysqldexporter:
+#    container_name: mysql_exporter_container
+#    image: prom/mysqld-exporter
+#    command: --collect.binlog_size --collect.info_schema.processlist
+#    restart: always
+#    env_file:
+#      - mysqld_exporter.env
+#    depends_on:
+#      - db
+  db:
+    container_name: mysql_container
+    image: "mysql:5.7"
+    restart: always
+    hostname: db
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    env_file:
+      - mysql.env
+    volumes:
+      - crv_mysql:/var/lib/mysql
+    ports:
+      - "3307:3306"
+  web:
+    container_name: somagh_container
+    command: /usr/local/bin/gunicorn --env DJANGO_SETTINGS_MODULE=Somagh.settings Somagh.wsgi -w 4 -b 0.0.0.0:8000
+    restart: always
+    hostname: somagh
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: somagh
+    environment:
+#      - prometheus_multiproc_dir=/data/web/metrics
+      - PYTHONUNBUFFERED=TRUE
+    volumes:
+      - .:/data/web/
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+  migrate:
+    container_name: somagh_migrate_cointainer
+    command: python manage.py migrate
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: somagh
+    volumes:
+      - .:/data/web/
+    depends_on:
+      - db
+  makemigrations:
+    container_name:  somagh_make_migrate_container
+    command: python manage.py makemigrations
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: somagh
+    volumes:
+      - .:/data/web/
+    depends_on:
+      - db
+  collectstatic:
+    container_name: somagh_collectstatic_cointainer
+    command: python manage.py collectstatic --noinput
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: somagh
+    volumes:
+      - .:/data/web/
+    depends_on:
+      - db
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: myadmin_container
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+  sentry-web:
+    <<: *sentry
+    container_name: sentry_main_container
+    depends_on:
+      - sentry-cron
+      - sentry-worker
+    ports:
+      - "9000:9000"
+
+  sentry-cron:
+    <<: *sentry
+    container_name: sentry_cron_container
+    command: run cron
+
+  sentry-worker:
+    <<: *sentry
+    container_name: sentry_worker_container
+    command: run worker
+
+  sentry-redis:
+    restart: unless-stopped
+    container_name: sentry_redis_container
+    image: redis:alpine
+
+  sentry-postgres:
+    restart: unless-stopped
+    container_name: sentry_postgres_container
+    image: postgres:alpine
+    env_file:
+      - postgres.env
+    volumes:
+      - sentry-postgres:/var/lib/postgresql/data
+
+volumes:
+  crv_mysql:
+    external: true
+#  grafana_storage:
+#    external: true
+  sentry-data:
+    external: true
+  sentry-postgres:
+external: true

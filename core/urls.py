@@ -1,6 +1,6 @@
 from django.urls import path, include
 from .views.user import UserRegisterView, CurrentProfileDetail, RetrieveProfile, ConfitmProfile, DeactiveProfile,\
-    DeleteProfile, ListDepartments
+    DeleteProfile, ListDepartments, StaffProfileMinimalList
 from .views.case import CaseCreate, ReferList, Action, CaseList, CaseChangeSatisfied
 
 urlpatterns = [
@@ -10,6 +10,7 @@ urlpatterns = [
     path('user/confirm/<int:pk>/', ConfitmProfile.as_view()),
     path('user/deactive/<int:pk>/', DeactiveProfile.as_view()),
     path('user/delete/<int:pk>/', DeleteProfile.as_view()),
+    path('user/staff/list/', StaffProfileMinimalList.as_view()),
     path('department/all/', ListDepartments.as_view()),
     path('case/create/', CaseCreate.as_view()),
     path('case/list/', CaseList.as_view()),

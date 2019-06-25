@@ -26,6 +26,12 @@ class DepartmentDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class UserMinimalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'first_name', 'last_name')
+
+
 class RegisterUserSerialzier(serializers.Serializer):
     username = serializers.CharField(max_length=20)
     password = serializers.CharField(max_length=100, write_only=True)
@@ -82,11 +88,11 @@ class ReferListSerialzier(serializers.ModelSerializer):
 
     class Meta:
         model = Refer
-        fields = ('case', 'date', 'description', 'isLeaf', 'sender', 'reciever')
+        fields = ('id', 'case', 'date', 'description', 'isLeaf', 'sender', 'receiver')
 
 
 class ActionSerializer(serializers.Serializer):
-    id = serializers.IntegerField(write_only=True)
+    id = serializers.IntegerField(read_only=True)
     case = serializers.PrimaryKeyRelatedField(queryset=Case.objects.all().exclude(status=Case.Closed))
     sender = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     receiver = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True)
